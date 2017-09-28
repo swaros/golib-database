@@ -119,8 +119,6 @@ class MySql implements Provider {
         $res = $this->getConnection()->query( $query, $resultmode );
         if ($this->getConnection()->errno) {
             trigger_error( $this->getConnection()->error, E_USER_ERROR );
-            \Game_Tools_Debug::log( $this->getConnection()->error, true, 'RED' );
-            \Game_Tools_Debug::log( $query, true, 'YELLOW' );
         }
 
         $this->lastAffectedRows = $this->getConnection()->affected_rows;
