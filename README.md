@@ -60,6 +60,10 @@ for ($i = 0; $i < 3; $i++) {
 
 ### Table Example
 
+Database Example setup
+
+Structure
+
 ```sql
 CREATE TABLE `golib-db` (
 `primId` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY ,
@@ -67,5 +71,21 @@ CREATE TABLE `golib-db` (
 `DateExample` DATETIME NOT NULL ,
 `ExampleValue` MEDIUMINT NOT NULL
 ) ENGINE = InnoDB;
+```
+
+Data
+
+```sql
+INSERT INTO `golib-db` (
+`primId` ,
+`Content` ,
+`DateExample` ,
+`ExampleValue`
+)
+VALUES (
+NULL , 'test content', '2017-09-30 00:00:00', '450'
+), (
+NULL , 'second content', '2017-09-19 00:00:00', '9887'
+);
 ```
 
