@@ -14,5 +14,47 @@ use golibdatabase\Database\MySql;
 $connect = new MySql\ConnectInfo( 'username','password','hostname','default_shema' );
 $db = new MySql( $connect );
 $result = $db->select( 'SELECT * FROM Tablename' );
-var_dump( $result->getResult() );
+if ($result->getErrorNr()) {
+        echo " --- mysql error:" . $result->getError();
+    } else {
+        echo " --- got " . $result->count() . 'entries ';
+        var_dump( $result->getResult() );
+    }
+}
+```
+
+
+### Connection Manager
+
+is written for cases you can not be sure the connection is already existing (for example by replacing a singelton db implementation)
+
+```php
+// run the whole code 3 times just to explain what the connection-manager is doing
+for ($i = 0; $i < 3; $i++) {
+    $connect = new MySql\ConnectInfo( 'username','password','hostname','default_shema' );
+
+    $connectManager = new Database\ConnectManager();
+
+    if ($connectManager->connectionIsStored( $connect )) {
+        $db = $connectManager->getStoredConnection( $connect );
+        echo ' --- use existing connection --- ';
+    } else {
+        echo ' --- create a new connection --- ';
+        $db = new MySql( $connect );
+        $connectManager->registerConnection( $db );
+    }
+
+    $result = $db->select( 'SELECT * FROM Tablename' );
+
+    if ($result->getErrorNr()) {
+        echo " --- mysql error:" . $result->getError();
+
+    } else {
+        echo " --- got " . $result->count() . 'entries ';
+        var_dump( $result->getResult() );
+
+    }
+}
+
+
 ```
