@@ -14,7 +14,7 @@
     "license": "MIT",
     "require": {
         "php": ">=5.3.0",
-        "gorgo/golib": "dev-master"
+        "gorgo/golib": "0.1.1"
     },
     "autoload": {
         "psr-4": {

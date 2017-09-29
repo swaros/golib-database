@@ -4,12 +4,12 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "2977d4cb6a2253f9b6f3ac93af786e8d",
-    "content-hash": "9863038ff5cce152113798e313d03cbc",
+    "hash": "30f9bd0c638ff7104cbd36656dc11eea",
+    "content-hash": "3ee91bac71b05e4c007f316f54620664",
     "packages": [
         {
             "name": "gorgo/golib",
-            "version": "dev-master",
+            "version": "0.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/swaros/golib.git",
@@ -53,9 +53,7 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "gorgo/golib": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
