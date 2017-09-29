@@ -39,7 +39,7 @@ for ($i = 0; $i < 3; $i++) {
         $db = $connectManager->getStoredConnection( $connect );
         echo ' --- use existing connection --- ';
     } else {
-        echo ' --- create a new connection --- ';
+        echo ' ---- create a new connection --- ';
         $db = new MySql( $connect );
         $connectManager->registerConnection( $db );
     }
@@ -56,5 +56,16 @@ for ($i = 0; $i < 3; $i++) {
     }
 }
 
-
 ```
+
+### Table Example
+
+```sql
+CREATE TABLE `golib-db` (
+`primId` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+`Content` VARCHAR( 250 ) NOT NULL ,
+`DateExample` DATETIME NOT NULL ,
+`ExampleValue` MEDIUMINT NOT NULL
+) ENGINE = InnoDB;
+```
+

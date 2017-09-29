@@ -4,21 +4,21 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "30f9bd0c638ff7104cbd36656dc11eea",
-    "content-hash": "3ee91bac71b05e4c007f316f54620664",
+    "hash": "0b9252e18425e141c2219ec8286d6a23",
+    "content-hash": "b308c173b6a2191a899d92b6f732b4e9",
     "packages": [
         {
             "name": "gorgo/golib",
-            "version": "0.1.1",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/swaros/golib.git",
-                "reference": "38b1c1884b6d2959dbb08c76d83bfde733c4754a"
+                "reference": "0ed1eab846b2eaa46acc28901874c15edd69de39"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/swaros/golib/zipball/38b1c1884b6d2959dbb08c76d83bfde733c4754a",
-                "reference": "38b1c1884b6d2959dbb08c76d83bfde733c4754a",
+                "url": "https://api.github.com/repos/swaros/golib/zipball/0ed1eab846b2eaa46acc28901874c15edd69de39",
+                "reference": "0ed1eab846b2eaa46acc28901874c15edd69de39",
                 "shasum": ""
             },
             "require": {
@@ -47,7 +47,7 @@
                 "enums",
                 "properties"
             ],
-            "time": "2017-09-14 09:58:01"
+            "time": "2017-09-29 12:16:54"
         }
     ],
     "packages-dev": [],
