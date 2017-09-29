@@ -171,7 +171,7 @@ abstract class Table implements TableInterface {
      * @return string
      */
     private function getLoadStatement () {
-        $sql = "SELECT " . $this->getLoadFields() . " FROM {$this->tableName}";
+        $sql = "SELECT " . $this->getLoadFields() . " FROM `{$this->tableName}`";
         if ($this->where != NULL) {
             $sql .= ' WHERE ' . $this->where->getWhereCondition();
         }
@@ -194,7 +194,7 @@ abstract class Table implements TableInterface {
      * @return int
      */
     public function fetchSize ( MySql $db ) {
-        $sql = "SELECT count(1) as CNT FROM {$this->tableName}";
+        $sql = "SELECT count(1) as CNT FROM `{$this->tableName}`";
         if ($this->where != NULL) {
             $sql .= ' WHERE ' . $this->where->getWhereCondition();
         }
