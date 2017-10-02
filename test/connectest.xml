@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<test name="simple Database Integration Test">
+    <construct>
+        <connect namespace="golibdatabase\Database\MySql" type="ConnectInfo">
+            <param value="USER"/>
+            <param value="PASSWORD"/>
+            <param value="HOST"/>
+            <param value="DEFAULT_DATABASE"/>
+        </connect>
+
+        <db namespace="golibdatabase\Database" type="MySql">
+            <param value="($connect)"/>
+        </db>
+    </construct>
+    <testcase name="init or resets database tables">
+        <use object="($db)" method="query">
+            <dropTable>
+                <param type="(string)" value="DROP TABLE IF EXISTS `golib-db`"/>
+            </dropTable>
+            <createTable>
+                <param type="(string)" value="CREATE TABLE `golib-db` (`primId` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY ,`Content` VARCHAR( 250 ) NOT NULL ,`DateExample` DATETIME NOT NULL ,`ExampleValue` MEDIUMINT NOT NULL) ENGINE = InnoDB;"/>
+            </createTable>
+            <insertValues>
+                <param type="(string)" value="INSERT INTO `golib-db` (`primId` ,`Content` ,`DateExample` ,`ExampleValue`) VALUES (NULL , 'test content', '2017-09-30 00:00:00', '450'), (NULL , 'second content', '2017-09-19 00:00:00', '9887');"/>
+            </insertValues>
+        </use>
+    </testcase>
+    <testcase name="test database access">
+        <use object="($db)" method="select">
+            <simpleQuery>
+                <param type="(string)" value="SELECT * FROM `golib-db`"/>
+                <expected type="_user_object_">
+                    <ObjectProp type="(int)" value="2" propertie="count"/>
+                    <ObjectProp type="(int)" value="2" propertie="getRes->num_rows"/>
+                    <ObjectProp type="(int)" value="4" propertie="getRes->field_count"/>
+                    <ObjectProp type="(int)" value="0" propertie="getRes->current_field"/>
+                </expected>
+            </simpleQuery>
+
+            <limitedQuery>
+                <param type="(string)" value="SELECT primId FROM `golib-db` LIMIT 1"/>
+                <expected type="_user_object_">
+                    <ObjectProp type="(int)" value="1" propertie="count"/>
+                    <ObjectProp type="(int)" value="1" propertie="getRes->num_rows"/>
+                    <ObjectProp type="(int)" value="1" propertie="getRes->field_count"/>
+                    <ObjectProp type="(int)" value="0" propertie="getRes->current_field"/>
+                </expected>
+            </limitedQuery>
+        </use>
+    </testcase>
+</test>
