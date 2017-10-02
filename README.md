@@ -128,7 +128,6 @@ Step 2: Define the Table Class that points to the table, and setup the Propertie
 
 ```php
 use golib\Types;
-/
 /**
  * the table class
  * that maps to the table in the database.
@@ -159,8 +158,9 @@ class exampleTable extends MySql\Table {
 
 ```
 
-Thats all what is needed to setup the basic Model for a Table.
-to get data.
+That is all what is needed to setup the basic Model for a Table.
+to read from this this table you make a new instance of these class
+and fetch the Data by using a existing Database Connection.
 
 
 ```php
@@ -175,3 +175,53 @@ $golibTable->foreachCall( function(exampleProp $row) {
     var_dump( $row );
 } );
 ```
+
+Now we have a Modell of the Database Table as an PHP-Object this will read the full
+content of the Table and assign it to row-objects.
+
+#### WhereSet
+
+But mostly you don't need the whole Content. in MySQL you handle this by adding
+a `where` statement to filter the result.
+The same can be done by using a `WhereSet`.
+
+so change the code in the example
+
+```php
+$where = new MySql\WhereSet();
+$where->isEqual( 'ExampleValue', 9887 );
+
+$golibTable = new exampleTable( $where );
+```
+
+now we will got the matching values only.
+
+
+#### Limit
+
+The `Limit` class is usefull to Limit the Amount of entries like the regular
+Limit from MySQL. A instance of Limit have to be the second Parameter.
+
+```php
+$Limit = new MySql\Limit();
+$Limit->count = 1;
+
+$golibTable = new exampleTable( NULL, $limit );
+```
+
+this object have just to Properties. `start` defines the offset and `count` the
+count of entries.
+
+```php
+$Limit = new MySql\Limit();
+
+$Limit->count = 1;
+$Limit->start = 1; // equal to LIMIT 1,1
+
+$Limit->count = 100;
+$Limit->start = 0; // equal to LIMIT 0,100
+```
+
+#### Order
+
+
