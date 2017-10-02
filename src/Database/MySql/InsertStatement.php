@@ -89,7 +89,7 @@ class InsertStatement {
      * @return string
      */
     private function getRealFieldName ( $name ) {
-        return $this->tableName . '.' . str_replace( array(
+        return '`' . $this->tableName . '`.' . str_replace( array(
                     '`',
                     ' ',
                     $this->tableName,
