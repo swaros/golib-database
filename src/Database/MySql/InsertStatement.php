@@ -194,7 +194,7 @@ class InsertStatement {
             return '';
         }
         $fieldNames = implode( ',', array_keys( $this->fieldNames ) );
-        $sql = "INSERT INTO {$this->tableName} ({$fieldNames}) VALUES ";
+        $sql = "INSERT INTO `{$this->tableName}` ({$fieldNames}) VALUES ";
 
         $valArray = array();
         for ($i = 0; $i < $this->rowCount; $i++) {
