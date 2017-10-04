@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <test name="simple Database Integration Test">
     <construct>
+        <!-- insert credentials to get access to the database. the user needs the create table permission -->
         <connect namespace="golibdatabase\Database\MySql" type="ConnectInfo">
             <param value="USER"/>
             <param value="PASSWORD"/>
@@ -12,19 +13,31 @@
             <param value="($connect)"/>
         </db>
     </construct>
+    <!-- initialisation of the tables as testcase -->
     <testcase name="init or resets database tables">
         <use object="($db)" method="query">
             <dropTable>
                 <param type="(string)" value="DROP TABLE IF EXISTS `golib-db`"/>
+                <expected type="(bool)">
+                    <equals type="(bool)" value="1"/>
+                </expected>
+
             </dropTable>
             <createTable>
                 <param type="(string)" value="CREATE TABLE `golib-db` (`primId` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY ,`Content` VARCHAR( 250 ) NOT NULL ,`DateExample` DATETIME NOT NULL ,`ExampleValue` MEDIUMINT NOT NULL) ENGINE = InnoDB;"/>
+                <expected type="(bool)">
+                    <equals type="(bool)" value="1"/>
+                </expected>
             </createTable>
             <insertValues>
                 <param type="(string)" value="INSERT INTO `golib-db` (`primId` ,`Content` ,`DateExample` ,`ExampleValue`) VALUES (NULL , 'test content', '2017-09-30 00:00:00', '450'), (NULL , 'second content', '2017-09-19 00:00:00', '9887');"/>
+                <expected type="(bool)">
+                    <equals type="(bool)" value="1"/>
+                </expected>
             </insertValues>
         </use>
     </testcase>
+    <!--  trying to get the data from table -->
     <testcase name="test database access">
         <use object="($db)" method="select">
             <simpleQuery>
@@ -34,16 +47,21 @@
                     <ObjectProp type="(int)" value="2" propertie="getRes->num_rows"/>
                     <ObjectProp type="(int)" value="4" propertie="getRes->field_count"/>
                     <ObjectProp type="(int)" value="0" propertie="getRes->current_field"/>
+                    <ObjectProp propertie="getResult" value="9887" flags="inarray,iterate"/>
+                    <ObjectProp propertie="getResult" value="2017-09-19 00:00:00" flags="inarray,iterate"/>
+                    <ObjectProp propertie="getResult" value="450" flags="inarray,iterate"/>
+                    <ObjectProp propertie="getResult" value="2017-09-30 00:00:00" flags="inarray,iterate"/>
                 </expected>
             </simpleQuery>
 
             <limitedQuery>
-                <param type="(string)" value="SELECT primId FROM `golib-db` LIMIT 1"/>
+                <param type="(string)" value="SELECT ExampleValue FROM `golib-db` WHERE ExampleValue = 450 LIMIT 1"/>
                 <expected type="_user_object_">
                     <ObjectProp type="(int)" value="1" propertie="count"/>
                     <ObjectProp type="(int)" value="1" propertie="getRes->num_rows"/>
                     <ObjectProp type="(int)" value="1" propertie="getRes->field_count"/>
                     <ObjectProp type="(int)" value="0" propertie="getRes->current_field"/>
+                    <ObjectProp propertie="getResult" value="450" flags="inarray,iterate"/>
                 </expected>
             </limitedQuery>
         </use>
