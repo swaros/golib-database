@@ -22,6 +22,18 @@ class ConnectManagerTest extends TestCase
         $this->assertTrue($cnManager->connectionIsStored($connection));
     }
 
+    public function testDoubleRegisterFail()
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage("Not allowed to overwrite existing connections");
+        $connection = new MySql\ConnectInfo("user", "password", "hostname", "my-database");
+        $cnManager = new ConnectManager();
+        $db = new MySql($connection);
+        $cnManager->registerConnection($db);
+        $cnManager->registerConnection($db);
+
+    }
+
     /**
      * @throws Exception
      */
