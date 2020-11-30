@@ -1,6 +1,8 @@
 <?php
 namespace golibdatabase\Database;
 
+use Exception;
+
 /**
  * Description of ConnectManager
  *
@@ -15,21 +17,21 @@ namespace golibdatabase\Database;
 class ConnectManager {
 
     /**
-     * storage for allonnection Provider
-     * @var Array[Provider]
+     * storage for all connection Providers
+     * @var Provider[]
      */
-    private static $connectionStorage = array();
+    private static array $connectionStorage = array();
 
     /**
      * Register a Connection
-     * @param \golibdatabase\Database\Provider $connection
-     * @param type $allowOverWrite
-     * @throws \Exception
+     * @param Provider $connection
+     * @param bool $allowOverWrite
+     * @throws Exception
      */
-    public function registerConnection(Provider $connection, $allowOverWrite = false){
+    public function registerConnection(Provider $connection,bool $allowOverWrite = false){
         $storedCon = $this->getStoredConnection($connection->getConnectionData());
         if ($storedCon != NULL && $allowOverWrite === false){
-            throw new \Exception("Not allowed to overwrite existing connections");
+            throw new Exception("Not allowed to overwrite existing connections");
         }
 
         $id = $this->getStorageId($connection->getConnectionData());
@@ -39,10 +41,10 @@ class ConnectManager {
 
     /**
      * creates storage id by connectionData
-     * @param \golibdatabase\Database\ConnectData $conSetup
+     * @param ConnectData $conSetup
      * @return string
      */
-    private function getStorageId(ConnectData $conSetup){
+    private function getStorageId(ConnectData $conSetup): string{
         return $conSetup->getUserName() . '@'
                 . $conSetup->getHost() . '['
                 . $conSetup->getShemaName() . ']';
@@ -50,19 +52,19 @@ class ConnectManager {
 
     /**
      * checks if a connection already stored
-     * @param \golibdatabase\Database\ConnectData $conSetup
+     * @param ConnectData $conSetup
      * @return Boolean
      */
-    public function connectionIsStored(ConnectData $conSetup){
+    public function connectionIsStored(ConnectData $conSetup): bool{
         return (isset(self::$connectionStorage[ $this->getStorageId( $conSetup ) ]));
     }
 
     /**
      * get stored connection or NULL if not stored
-     * @param \golibdatabase\Database\ConnectData $conSetup
-     * @return Provider
+     * @param ConnectData $conSetup
+     * @return Provider|null
      */
-    public function getStoredConnection(ConnectData $conSetup){
+    public function getStoredConnection(ConnectData $conSetup): Provider|null{
         $id = $this->getStorageId($conSetup);
         if (isset(self::$connectionStorage[$id])){
             return self::$connectionStorage[$id];
