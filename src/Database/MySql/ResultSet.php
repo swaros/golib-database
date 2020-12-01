@@ -1,6 +1,8 @@
 <?php
 namespace golibdatabase\Database\MySql;
 
+use mysqli_result;
+
 /**
  * Description of ResultSet
  *
@@ -22,7 +24,7 @@ class ResultSet {
         $this->count++;
     }
 
-    public function applyRes(\mysqli_result $res){
+    public function applyRes(mysqli_result $res){
         $this->res = $res;
     }
 
@@ -48,7 +50,7 @@ class ResultSet {
 
     /**
      *
-     * @return \mysqli_result
+     * @return mysqli_result
      */
     public function getRes(){
         return $this->res;

@@ -7,26 +7,27 @@ namespace golibdatabase\Database\Sql;
  *
  * @author tziegler
  *
- * this class is just an placeholdermapper
+ * this class is just an placeholder mapper
  * for sql.
  *
  */
-class SimpleSql {
+class SimpleSql
+{
 
     /**
      * all placeholders that should be converted to
      * default %s placeholder
-     * @var type
+     * @var array
      */
-    private $replaces = array(
-        '?');
+    private array $replaces = array('?');
 
     /**
      * all non default placeholders
      * that have to be converted
-     * @param array $replaces
+     * @param array|null $replaces
      */
-    public function __construct ( $replaces = NULL ) {
+    public function __construct(array|null $replaces = NULL)
+    {
         if ($replaces != NULL) {
             $this->replaces = $replaces;
         }
@@ -35,12 +36,13 @@ class SimpleSql {
     /**
      * sql string including placeholdes
      * @param string $sql
-     * @param array $parameters
-     * @return sting parsed sql string
+     * @param array|string|null $parameters
+     * @return string parsed sql string
      */
-    public function sqlString ( $sql, $parameters = NULL ) {
-        if (!is_array( $parameters )) {
-            $parameters = array_slice( func_get_args(), 1 );
+    public function sqlString(string $sql,array|string|null $parameters = NULL): string
+    {
+        if (!is_array($parameters)) {
+            $parameters = array_slice(func_get_args(), 1);
         }
         return $this->parsePlaceHolders( $sql, $parameters );
     }
@@ -51,36 +53,35 @@ class SimpleSql {
      * @param array $params
      * @return string
      */
-    private function parsePlaceHolders ( $sql, array $params ) {
-        if (!is_array( $params ) || empty( $params )) {
+    private function parsePlaceHolders(string $sql, array $params)
+    {
+        if (!is_array($params) || empty($params)) {
             return $sql;
         }
 
-        $sqlNoQuestMark = str_replace( $this->replaces, "%s", $sql );
-        $sqlB = $this->sprintfArras( $sqlNoQuestMark, $params );
-        $sqlC = str_replace( "''", "'", $sqlB );
-
-
-        return $sqlC;
+        $sqlNoQuestMark = str_replace($this->replaces, "%s", $sql);
+        $sqlB = $this->sprintfArras($sqlNoQuestMark, $params);
+        return str_replace("''", "'", $sqlB);
     }
 
     /**
      * mapping for sprintf so
      * it can use arrays
-     * @param type $format
-     * @param type $arr
-     * @return type
+     * @param string $format
+     * @param array $arr
+     * @return string
      */
-    private function sprintfArras ( $format, $arr ) {
+    private function sprintfArras(string $format, array $arr): string
+    {
 
         foreach ($arr as &$val) {
-            if (is_string( $val )) {
-                $val = "'" . addslashes( stripslashes( $val ) ) . "'";
+            if (is_string($val)) {
+                $val = "'" . addslashes(stripslashes($val)) . "'";
             }
         }
 
-        return call_user_func_array( 'sprintf',
-                                     array_merge( (array) $format, $arr ) );
+        return call_user_func_array('sprintf',
+            array_merge((array)$format, $arr));
     }
 
 }

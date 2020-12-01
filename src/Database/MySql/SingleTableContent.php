@@ -191,13 +191,12 @@ abstract class SingleTableContent extends Props implements TableInterface {
     }
 
     /**
-     * aplly the value and double check
+     * apply the value and double check
      * if the diff contains just on different types
-     * @param type $propName
-     * @param type $propValue
-     * @return type
+     * @param string $propName
+     * @param mixed $propValue
      */
-    private function diffApply ( $propName, $propValue ) {
+    private function diffApply (string $propName, $propValue ) {
         switch (gettype( $propValue )) {
             case 'boolean':
                 $propValue = (int) $propValue;

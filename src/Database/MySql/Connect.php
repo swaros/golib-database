@@ -1,48 +1,68 @@
 <?php
+
 namespace golibdatabase\Database\MySql;
+
 use golibdatabase\Database;
+use golibdatabase\Database\ConnectData;
+use mysqli;
+
 /**
  * Description of Connect
  *
  * @author tziegler
  */
-class Connect implements Database\Connect{
+class Connect implements Database\Connect
+{
 
     /**
      *
      * @var boolean
      */
-    private $connected = false;
+    private bool $connected = false;
 
     /**
      *
-     * @var Database\ConnectData
+     * @var ConnectData|null
      */
-    private $connctInfo = NULL;
+    private ?ConnectData $connectInfo = NULL;
 
     /**
      *
-     * @var \mysqli
+     * @var mysqli|null
      */
-    private $mysqli = NULL;
+    private ?mysqli $mysqli = NULL;
 
-    private $lastError = NULL;
+    private ?string $lastError = NULL;
 
     /**
-     * VConnect to Database by using the connection Info
-     * @param \golibdatabase\Database\ConnectData $connectionInfo
+     * Connect to Database by using the connection Info.
+     * a created mysqli object can be injected.
+     * this connection will be closed and reopened by the
+     * connect command.
+     * so this is not useful for production to inject a
+     * established mysqli connection with different credentials.
+     * injecting a already created mysqli object
+     * is meant for testing not for production.
+     *
+     * @param ConnectData $connectionInfo
+     * @param mysqli|null $mysqli
      * @return boolean
      */
-    public function connect(Database\ConnectData $connectionInfo) {
-        $this->connctInfo = $connectionInfo;
+    public function connect(ConnectData $connectionInfo, mysqli|null $mysqli = null): bool
+    {
+        if ($mysqli !== null) {
+            $this->mysqli = $mysqli;
+        }
+        $this->connectInfo = $connectionInfo;
         return $this->connectDb();
     }
 
     /**
-     * retuns if the Databse is connected
+     * returns if the Database is connected
      * @return boolean
      */
-    public function isConnected() {
+    public function isConnected()
+    {
         return $this->connected;
     }
 
@@ -50,16 +70,18 @@ class Connect implements Database\Connect{
      * returns the last error Message
      * @return string
      */
-    public function getLastError(){
+    public function getLastError()
+    {
         return $this->lastError;
     }
 
     /**
      * get the connection
-     * @return \mysqli
+     * @return mysqli
      */
-    public function getConnection(){
-        if ($this->isConnected()){
+    public function getConnection()
+    {
+        if ($this->isConnected()) {
             return $this->mysqli;
         }
 
@@ -69,25 +91,43 @@ class Connect implements Database\Connect{
     /**
      * close the connection
      */
-    public function close(){
-        if ($this->mysqli !== NULL ){
+    public function close()
+    {
+        if ($this->mysqli !== NULL) {
             $this->mysqli->close();
             $this->connected = false;
         }
     }
 
     /**
-     * connect to database
+     * connect to database by using the submitted
+     * connection info.
+     * if a mysqli was injected, then the connection
+     * will be closed and reopened also by using
+     * the connectionInfo.
+     * injecting a already created mysqli object
+     * i meant for testing not for production
      * @return boolean
      */
-    private function connectDb(){
-        $this->mysqli = new \mysqli(
-                $this->connctInfo->getHost(),
-                $this->connctInfo->getUserName(),
-                $this->connctInfo->getPassword(),
-                $this->connctInfo->getShemaName());
-
-        if ($this->mysqli->connect_error){
+    private function connectDb(): bool
+    {
+        if ($this->mysqli == null) {
+            $this->mysqli = new mysqli(
+                $this->connectInfo->getHost(),
+                $this->connectInfo->getUserName(),
+                $this->connectInfo->getPassword(),
+                $this->connectInfo->getShemaName());
+        } else {
+            // reconnect
+            $this->mysqli->close();
+            $this->mysqli->connect(
+                $this->connectInfo->getHost(),
+                $this->connectInfo->getUserName(),
+                $this->connectInfo->getPassword(),
+                $this->connectInfo->getShemaName()
+            );
+        }
+        if ($this->mysqli->connect_error) {
             $this->lastError = $this->mysqli->connect_error;
             $this->connected = false;
             return false;

@@ -2,15 +2,21 @@
 
 namespace golibdatabase\Database;
 
+use Exception;
+use golibdatabase\Database\MySql\ConnectInfo;
 use golibdatabase\Database\MySql\Index;
+use golibdatabase\Database\MySql\ResultSet;
 use golibdatabase\Database\Sql\SimpleSql;
+use mysqli;
+use mysqli_result;
 
 /**
  * Description of MySql
  *
  * @author tziegler
  */
-class MySql implements Provider {
+class MySql implements Provider
+{
 
     const TRANS_MODE_NATIVE = 1;
     const TRANS_MODE_MANUEL = 2;
@@ -18,87 +24,95 @@ class MySql implements Provider {
 
     /**
      *
-     * @var \golibdatabase\Database\MySql\Connect
+     * @var MySql\Connect|null
      */
-    private $connection = NULL;
+    private ?MySql\Connect $connection = NULL;
 
     /**
      *
-     * @var Index
+     * @var Index|null
      */
-    private $index = NULL;
+    private ?Index $index = NULL;
 
     /**
      *
-     * @var \golibdatabase\Database\MySql\ConnectInfo
+     * @var MySql\ConnectInfo|null
      */
-    private $connectionInfo = NULL;
+    private ?MySql\ConnectInfo $connectionInfo = NULL;
 
     /**
      * last id number
-     * @var int
+     * @var int|null
      */
-    private $lastInsertId = NULL;
+    private ?int $lastInsertId = NULL;
 
     /**
-     * count of fields if readed
-     * @var int
+     * count of fields if re added
+     * @var ?int
      */
-    private $lastFieldCount = NULL;
+    private ?int $lastFieldCount = NULL;
 
     /**
      * last affected rows on updates
      * -1 means nothing to update (becasue of select or something like this)
-     * @var int
+     * @var ?int
      */
-    private $lastAffectedRows = NULL;
+    private ?int $lastAffectedRows = NULL;
 
     /**
      * if a transaction is started
      * @var boolean
      */
-    private $transactionStarted = false;
+    private bool $transactionStarted = false;
 
     /**
      * set the mode of transaction. 1 means the native method
      * 2 means manual
      * @var int
      */
-    private $transactionMode = 1;
+    private int $transactionMode = 1;
 
     /**
      * construct by using connect info
-     * @param \golibdatabase\Database\MySql\ConnectInfo $connection
+     * @param ConnectInfo $connection
+     * @param MySql\Connect|null $connect
      */
-    public function __construct ( MySql\ConnectInfo $connection ) {
+    public function __construct(MySql\ConnectInfo $connection, MySql\Connect|null $connect = null)
+    {
         $this->connectionInfo = $connection;
-        $this->connection = new MySql\Connect();
+        if ($connect == null) {
+            $this->connection = new MySql\Connect();
+        } else {
+            $this->connection = $connect;
+        }
     }
 
-    private function connect () {
-        return $this->connection->connect( $this->connectionInfo );
+    private function connect()
+    {
+        return $this->connection->connect($this->connectionInfo);
     }
 
     /**
      *
      * @return MySql\Connect
      */
-    public function getDatabaseConnection () {
+    public function getDatabaseConnection()
+    {
         return $this->connection;
     }
 
     /**
      * return used mysqli connection
-     * <itest>testcase</itest>
-     * @return \mysqli connection
+     * @return mysqli connection
      * @throws Exception
      */
-    public function getConnection () {
+    public function getConnection()
+    {
         if (!$this->connection->isConnected()) {
             if ($this->connect() === false) {
-                throw new \Exception( "Can't connect to Database:"
-                .
-                $this->connection->getLastError() );
+                throw new Exception("Can't connect to Database:"
+                    .
+                    $this->connection->getLastError());
             }
         }
         return $this->connection->getConnection();
@@ -110,15 +124,17 @@ class MySql implements Provider {
      *
      * if you want some results use select instead.
      *
-     * @param type $query
-     * @param type $resultmode
-     * @return type
+     * @param string $query
+     * @param int $resultMode
+     * @return bool|mysqli_result
+     * @throws Exception
      */
-    public function query ( $query, $resultmode = MYSQLI_STORE_RESULT ) {
+    public function query(string $query, int $resultMode = MYSQLI_STORE_RESULT): bool|mysqli_result
+    {
         $this->resetStates();
-        $res = $this->getConnection()->query( $query, $resultmode );
+        $res = $this->getConnection()->query($query, $resultMode);
         if ($this->getConnection()->errno) {
-            trigger_error( $this->getConnection()->error, E_USER_ERROR );
+            trigger_error($this->getConnection()->error, E_USER_ERROR);
         }
 
         $this->lastAffectedRows = $this->getConnection()->affected_rows;
@@ -131,7 +147,8 @@ class MySql implements Provider {
     /**
      * reset states before reading
      */
-    private function resetStates () {
+    private function resetStates()
+    {
         $this->lastAffectedRows = NULL;
         $this->lastInsertId = NULL;
         $this->lastFieldCount = NULL;
@@ -141,7 +158,8 @@ class MySql implements Provider {
      * returns last affected rows
      * @return int
      */
-    public function getlastAffectedRows () {
+    public function getlastAffectedRows(): int
+    {
         return $this->lastAffectedRows;
     }
 
@@ -149,24 +167,27 @@ class MySql implements Provider {
      * returns last insert ID
      * @return int
      */
-    public function getLastInsertId () {
+    public function getLastInsertId(): int
+    {
         return $this->lastInsertId;
     }
 
     /**
-     * get the indiscies from a table
-     * @param type $tableName
+     * get the indices from a table
+     * @param string $tableName
      * @return Index
+     * @throws Exception
      */
-    public function getTableIndex ( $tableName ) {
+    public function getTableIndex(string $tableName): Index
+    {
 
         if ($this->index == NULL) {
             $this->index = new Index();
         }
-        $this->index->setCurrentTable( $tableName );
+        $this->index->setCurrentTable($tableName);
 
-        if (!$this->index->existsTableIndex( $tableName )) {
-            $this->index->registerTableIndex( $this );
+        if (!$this->index->existsTableIndex($tableName)) {
+            $this->index->registerTableIndex($this);
         }
 
         return $this->index;
@@ -183,26 +204,28 @@ class MySql implements Provider {
      * use golibdatabase\Database\Sql\Expression;
      * Mysql::select('SELECT * FROM Table WHERE id = %d AND regDate => %s',100,Expression('NOW()'));
      *
-     * @param type $query
-     * @return \golibdatabase\Database\MySql\ResultSet
+     * @param string $query
+     * @return ResultSet
+     * @throws Exception
      */
-    public function select ( $query ) {
+    public function select(string $query): ResultSet
+    {
         if (func_num_args() > 1) {
-            $parameters = array_slice( func_get_args(), 1 );
+            $parameters = array_slice(func_get_args(), 1);
             $qsql = new SimpleSql();
-            $query = $qsql->sqlString( $query, $parameters );
+            $query = $qsql->sqlString($query, $parameters);
         }
-        $res = $this->query( $query, MYSQLI_USE_RESULT );
+        $res = $this->query($query, MYSQLI_USE_RESULT);
         $result = new MySql\ResultSet();
         if ($this->getConnection()->errno) {
-            $result->setError( $this->getConnection()->error );
-            $result->setErrorNr( $this->getConnection()->errno );
+            $result->setError($this->getConnection()->error);
+            $result->setErrorNr($this->getConnection()->errno);
         }
-        if ($res instanceof \mysqli_result) {
-            $result->applyRes( $res );
+        if ($res instanceof mysqli_result) {
+            $result->applyRes($res);
 
-            while ($row = $res->fetch_array( MYSQLI_ASSOC )) {
-                $result->applyRow( $row );
+            while ($row = $res->fetch_array(MYSQLI_ASSOC)) {
+                $result->applyRow($row);
             }
         }
         return $result;
@@ -210,54 +233,61 @@ class MySql implements Provider {
 
     /**
      * return true if a Transaction is started and
-     * not commited or rolled back.
+     * not committed or rolled back.
      * @return boolean
      */
-    public function inTransaction () {
-        return (bool) $this->transactionStarted;
+    public function inTransaction(): bool
+    {
+        return (bool)$this->transactionStarted;
     }
 
     /**
      * start a Transaction
+     * @throws Exception
      */
-    public function begin_transaction () {
+    public function begin_transaction()
+    {
         if ($this->transactionStarted) {
-            trigger_error( "Transaction allready started.use self::inTransaction to determeinate if transaction already running" );
+            trigger_error("Transaction already started.use self::inTransaction to determinate if transaction already running");
         }
         $this->transactionStarted = true;
 
-        if (method_exists( $this->getConnection(), 'begin_transaction' )) {
+        if (method_exists($this->getConnection(), 'begin_transaction')) {
             $this->getConnection()->begin_transaction();
             $this->transactionMode = self::TRANS_MODE_NATIVE;
         } else {
             $this->transactionMode = self::TRANS_MODE_MANUEL;
-            $this->query( "SET autocommit=0" );
-            $this->query( "START TRANSACTION" );
+            $this->query("SET autocommit=0");
+            $this->query("START TRANSACTION");
         }
     }
 
     /**
      * commit the Transaction
+     * @throws Exception
      */
-    public function commit () {
-        if (method_exists( $this->getConnection(), 'commit' ) && $this->transactionMode === self::TRANS_MODE_NATIVE) {
+    public function commit()
+    {
+        if (method_exists($this->getConnection(), 'commit') && $this->transactionMode === self::TRANS_MODE_NATIVE) {
             $this->getConnection()->commit();
         } else {
-            $this->query( "COMMIT" );
-            $this->query( "SET autocommit=1" );
+            $this->query("COMMIT");
+            $this->query("SET autocommit=1");
         }
         $this->transactionStarted = false;
     }
 
     /**
      * rollback a transaction
+     * @throws Exception
      */
-    public function rollback () {
-        if (method_exists( $this->getConnection(), 'rollback' ) && $this->transactionMode === self::TRANS_MODE_NATIVE) {
+    public function rollback()
+    {
+        if (method_exists($this->getConnection(), 'rollback') && $this->transactionMode === self::TRANS_MODE_NATIVE) {
             $this->getConnection()->rollback();
         } else {
-            $this->query( "ROLLBACK" );
-            $this->query( "SET autocommit=1" );
+            $this->query("ROLLBACK");
+            $this->query("SET autocommit=1");
         }
         $this->transactionStarted = false;
     }
@@ -266,7 +296,8 @@ class MySql implements Provider {
      *
      * @return ConnectData
      */
-    public function getConnectionData () {
+    public function getConnectionData(): ConnectData
+    {
         return $this->connectionInfo;
     }
 

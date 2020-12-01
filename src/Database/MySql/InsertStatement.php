@@ -2,9 +2,9 @@
 
 namespace golibdatabase\Database\MySql;
 
-use golibdatabase\Database\Sql\Expression;
-use golib\Types\Props;
 use golib\Types\MapConst;
+use golib\Types\Props;
+use golibdatabase\Database\Sql\Expression;
 
 /**
  * Description of InsertStatement
@@ -13,18 +13,18 @@ use golib\Types\MapConst;
  */
 class InsertStatement {
 
-    private $tableName = '';
-    private $fieldNames = array();
-    private $fieldValues = array();
-    private $duplicateHandling = true;
-    private $rowCount = 0;
+    private string $tableName = '';
+    private array $fieldNames = array();
+    private array $fieldValues = array();
+    private bool $duplicateHandling = true;
+    private int $rowCount = 0;
 
     /**
      *
      * @param string $tableName
      * @param boolean $duplicateHandling use insert on Dublicate Key or not
      */
-    public function __construct ( $tableName, $duplicateHandling = true ) {
+    public function __construct (string $tableName, $duplicateHandling = true ) {
         $this->tableName = $tableName;
         $this->duplicateHandling = $duplicateHandling;
     }
@@ -32,7 +32,7 @@ class InsertStatement {
     /**
      * enables or disbales the handling of creating on duplicate key
      *  'extension' for  insertstatements
-     * @param type $onOffBool
+     * @param mixed $onOffBool
      */
     public function setOnDuplicateKey ( $onOffBool ) {
         $this->duplicateHandling = (bool) $onOffBool;
@@ -57,10 +57,10 @@ class InsertStatement {
     /**
      * register a Fieldname for insert into this table
      * @param string $name of the Field. have to match witch the real fieldname in the table
-     * @param type $increasedOnUpdate
-     * @return \golibdatabase\Database\MySql\InsertStatement
+     * @param bool $increasedOnUpdate
+     * @return InsertStatement
      */
-    public function addField ( $name, $increasedOnUpdate = false ) {
+    public function addField (string $name, $increasedOnUpdate = false ) {
         $tableAdd = $this->getRealFieldName( $name );
         $this->fieldNames[$tableAdd] = $increasedOnUpdate;
         return $this;
@@ -71,7 +71,9 @@ class InsertStatement {
      * for insert.
      * all autoincs will be excluded
      * @param Props $props
-     * @return \golibdatabase\Database\MySql\InsertStatement
+     * @param array $ignore
+     * @param bool $inc
+     * @return InsertStatement
      */
     public function addFieldsByProps ( Props $props, array $ignore = array(),
                                        $inc = false ) {
@@ -98,19 +100,19 @@ class InsertStatement {
 
     /**
      * set values for the current Insert Row
-     * @param string $fieldname
+     * @param string $fieldName
      * @param mixed $value
-     * @return \golibdatabase\Database\MySql\InsertStatement
+     * @return InsertStatement
      */
-    public function addValues ( $fieldname, $value ) {
-        $tableAdd = $this->getRealFieldName( $fieldname );
+    public function addValues (string $fieldName, $value) {
+        $tableAdd = $this->getRealFieldName( $fieldName );
         $this->fieldValues[$this->rowCount][$tableAdd] = $value;
         return $this;
     }
 
     /**
      * mark the current row as final
-     * @return \golibdatabase\Database\MySql\InsertStatement
+     * @return InsertStatement
      */
     public function rowDone () {
         $this->rowCount++;
@@ -120,11 +122,11 @@ class InsertStatement {
     /**
      * get the stored values of a row
      * @param int $rowNumber
-     * @param string $fieldname
-     * @return Expression
+     * @param string $fieldName
+     * @return Expression|string
      */
-    private function getRowContent ( $rowNumber, $fieldname ) {
-        $data = $this->fieldValues[$rowNumber][$fieldname];
+    private function getRowContent (int $rowNumber, string $fieldName):Expression|string {
+        $data = $this->fieldValues[$rowNumber][$fieldName];
         if ($data instanceof Expression) {
             return $data;
         }
@@ -138,8 +140,8 @@ class InsertStatement {
     /**
      * mimic mysql_real_escape
      * found: http://php.net/manual/de/function.mysql-real-escape-string.php
-     * @param type $inp
-     * @return type
+     * @param mixed $inp
+     * @return string|array;
      */
     private function mysqlEscape ( $inp ) {
         if (is_array( $inp )) {

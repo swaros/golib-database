@@ -3,8 +3,8 @@
 namespace golibdatabase\Database\MySql;
 
 use golib\Types\PropsFactory;
-use golibdatabase\Database\MySql as Database;
 use golib\Types\Types;
+use golibdatabase\Database\MySql as Database;
 
 /**
  * Description of TableWriteable

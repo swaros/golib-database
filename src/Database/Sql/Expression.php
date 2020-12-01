@@ -1,4 +1,5 @@
 <?php
+
 namespace golibdatabase\Database\Sql;
 
 /**
@@ -6,15 +7,17 @@ namespace golibdatabase\Database\Sql;
  *
  * @author tziegler
  */
-class Expression {
-    private $value = NULL;
+class Expression
+{
+    private string|null $value = NULL;
 
     const NO_CONVERSION = false;
-    const TABLENAME = 1;
+    const TABLE_NAME = 1;
 
-    public function __construct($expression, $convertFlag = false) {
-        if ($convertFlag !== false){
-            if ($convertFlag == self::TABLENAME){
+    public function __construct(string $expression, bool $convertFlag = false)
+    {
+        if ($convertFlag !== false) {
+            if ($convertFlag == self::TABLE_NAME) {
                 $this->value = "`{$expression}`";
             } else {
                 throw new \InvalidArgumentException("Unsupported Conversion Flag");
@@ -24,7 +27,8 @@ class Expression {
         }
     }
 
-    public function __toString() {
+    public function __toString()
+    {
         return $this->value;
     }
 

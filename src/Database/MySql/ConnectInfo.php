@@ -1,5 +1,7 @@
 <?php
+
 namespace golibdatabase\Database\MySql;
+
 use golibdatabase\Database\ConnectData;
 
 /**
@@ -7,28 +9,31 @@ use golibdatabase\Database\ConnectData;
  *
  * @author tziegler
  */
-class ConnectInfo implements ConnectData{
+class ConnectInfo implements ConnectData
+{
 
-    private $host = NULL;
+    private ?string $host;
 
-    private $userName = NULL;
+    private ?string $userName;
 
-    private $password = NULL;
+    private ?string $password;
 
-    private $shema = NULL;
+    private ?string $schema;
 
-    public function __construct($username, $password, $host, $shema) {
+    public function __construct(string $username, string $password, string $host, string $schema)
+    {
         $this->userName = $username;
         $this->password = $password;
         $this->host = $host;
-        $this->shema = $shema;
+        $this->schema = $schema;
     }
 
     /**
      * get the Hostname
      * @return string
      */
-    public function getHost() {
+    public function getHost()
+    {
         return $this->host;
     }
 
@@ -36,23 +41,26 @@ class ConnectInfo implements ConnectData{
      * get the Password
      * @return string
      */
-    public function getPassword() {
+    public function getPassword()
+    {
         return $this->password;
     }
 
     /**
-     * get the used Database name (Shema)
+     * get the used Database name (Schema)
      * @return string
      */
-    public function getShemaName() {
-        return $this->shema;
+    public function getShemaName()
+    {
+        return $this->schema;
     }
 
     /**
      * get the Username
      * @return string
      */
-    public function getUserName() {
+    public function getUserName()
+    {
         return $this->userName;
     }
 

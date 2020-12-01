@@ -2,9 +2,11 @@
 
 namespace golibdatabase\Database\MySql;
 
-use golibdatabase\Database\MySql;
-use golibdatabase\Database\MySql\WhereSet;
+use Closure;
+use Exception;
 use golib\Types\PropsFactory;
+use golibdatabase\Database\MySql;
+use InvalidArgumentException;
 
 /**
  * Repesents a Layer for a single Table
@@ -13,76 +15,77 @@ use golib\Types\PropsFactory;
  */
 abstract class Table implements TableInterface {
 
-    private $tableName = NULL;
+    private ?string $tableName = NULL;
 
     /**
      * first selected item
-     * @var PropsFactory
+     * @var PropsFactory|null
      */
-    private $currentItem = NULL;
-    private $itemContainer = array();
+    private ?PropsFactory $currentItem = NULL;
+    private array $itemContainer = array();
 
     /**
      * used wheres set for loading content
-     * @var WhereSet
+     * @var WhereSet|null
      */
-    private $where = NULL;
+    private ?WhereSet $where = NULL;
 
     /**
      * last mysql error message
-     * @var string
+     * @var string|null
      */
-    private $error = NULL;
+    private ?string $error = NULL;
 
     /**
      * last mysql error code
-     * @var int
+     * @var int|null
      */
-    private $errorNumber = NULL;
-    private $buildIndex = false;
+    private ?int $errorNumber = NULL;
+    private bool $buildIndex = false;
 
     /**
-     * set of indicies
+     * set of indices
      * @var IndexSet[]
      */
-    private $indicies = array();
+    private array $indices = array();
 
     /**
      * assigned limit
-     * @var Limit
+     * @var Limit|null
      */
-    private $limit = NULL;
+    private ?Limit $limit = NULL;
 
     /**
      * assigned sort order
-     * @var Order
+     * @var Order|null
      */
-    private $sort = NULL;
+    private ?Order $sort = NULL;
 
     /**
      * data reading is done
      * @var boolean
      */
-    private $fetched = false;
+    private bool $fetched = false;
 
     /**
      * last used sql statement
      *
-     * @var string
+     * @var string|null
      */
-    public $lastLoadStatement = NULL;
+    public ?string $lastLoadStatement = NULL;
 
     /**
-     * array of fieldnames that are used for select.
+     * array of field names that are used for select.
      * if empty all fields will be loaded
-     * @var type
+     * @var array
      */
-    private $loadFields = array();
+    private array $loadFields = array();
 
     /**
      *
-     * @param WhereSet $where optional if no full content needed
-     * @throws \InvalidArgumentException
+     * @param WhereSet|null $where optional if no full content needed
+     * @param Limit|null $limit
+     * @param Order|null $order
      */
     public function __construct ( WhereSet $where = NULL, Limit $limit = NULL,
                                   Order $order = NULL ) {
@@ -90,7 +93,7 @@ abstract class Table implements TableInterface {
         if (is_string( $tableName ) && $tableName != '') {
             $this->tableName = $tableName;
         } else {
-            throw new \InvalidArgumentException( "Tablename must be a String" );
+            throw new InvalidArgumentException( "Tablename must be a String" );
         }
         $this->where = $where;
         $this->limit = $limit;
@@ -153,7 +156,7 @@ abstract class Table implements TableInterface {
     /**
      * creates loaded fieldnames except the fieldnames
      * tey are submitted as array
-     * @param array $ignore
+     * @param array|null $ignore
      */
     public function setLoadFieldsAndIgnore ( array $ignore = NULL ) {
         $prop = $this->getPropFactory();
@@ -192,6 +195,7 @@ abstract class Table implements TableInterface {
      * limitation
      * @param MySql $db
      * @return int
+     * @throws Exception
      */
     public function fetchSize ( MySql $db ) {
         $sql = "SELECT count(1) as CNT FROM `{$this->tableName}`";
@@ -210,12 +214,13 @@ abstract class Table implements TableInterface {
      * loads data and handle content
      * @param MySql $db
      * @return boolean
+     * @throws Exception
      */
     private function load ( MySql $db ) {
         $sql = $this->getLoadStatement();
         if ($this->buildIndex) {
             $index = $db->getTableIndex( $this->tableName );
-            $this->indicies = $index->getPrimary();
+            $this->indices = $index->getPrimary();
         }
 
         $result = $db->select( $sql );
@@ -239,7 +244,7 @@ abstract class Table implements TableInterface {
 
     /**
      * return the count of elements
-     * @return type
+     * @return int
      */
     public function count () {
         if (is_array( $this->itemContainer['content'] )) {
@@ -250,22 +255,24 @@ abstract class Table implements TableInterface {
 
     /**
      * maps current for content
-     * @return PropsFactory
+     * @return PropsFactory|null
      */
     public function current () {
         if (is_array( $this->itemContainer['content'] )) {
             return current( $this->itemContainer['content'] );
         }
+        return null;
     }
 
     /**
      * maps end for content
-     * @return PropsFactory
+     * @return PropsFactory|null
      */
     public function end () {
         if (is_array( $this->itemContainer['content'] )) {
             return end( $this->itemContainer['content'] );
         }
+        return null;
     }
 
     /**
@@ -306,9 +313,9 @@ abstract class Table implements TableInterface {
 
     /**
      * get entrie by primary key
-     * @param type $value
-     * @param type $checkNonTypeSave
-     * @return PropsPactory
+     * @param mixed $value
+     * @param bool $checkNonTypeSave
+     * @return PropsFactory|null
      */
     public function findPrimaryKey ( $value, $checkNonTypeSave = true ) {
         if (!is_array( $this->itemContainer['content'] ) || empty( $this->itemContainer['content'] )) {
@@ -325,6 +332,9 @@ abstract class Table implements TableInterface {
 
     /**
      * find the first matching content
+     * @param $key
+     * @param $value
+     * @param bool $checkNonTypeSave
      * @return PropsFactory
      */
     public function findFirstMatch ( $key, $value, $checkNonTypeSave = true ) {
@@ -350,7 +360,8 @@ abstract class Table implements TableInterface {
 
     /**
      * handle the data
-     * @param \golibdatabase\Database\MySql\ResultSet $result
+     * @param ResultSet $result
+     * @throws Exception
      */
     private function handleResult ( ResultSet $result ) {
         $this->currentItem = NULL;
@@ -358,7 +369,7 @@ abstract class Table implements TableInterface {
         foreach ($result->getResult() as $row) {
             $item = $this->getPropFactory();
             if ($item === NULL || !is_object( $item ) || !($item instanceof PropsFactory)) {
-                throw new \Exception( "Make sure " . get_class( $this ) . '::getPropFactory returns a Object of type ResultFactory' );
+                throw new Exception( "Make sure " . get_class( $this ) . '::getPropFactory returns a Object of type ResultFactory' );
             }
             $item->applyData( $row );
             if ($this->currentItem == NULL) {
@@ -377,11 +388,11 @@ abstract class Table implements TableInterface {
 
     /**
      * updates internal index array
-     * @param type $item
+     * @param mixed $item
      */
     private function indexUpdate ( $item ) {
         $keyValues = array();
-        foreach ($this->indicies as $index) {
+        foreach ($this->indices as $index) {
             $key = $index->Column_name;
             $value = $item->$key;
             $keyValues[] = $value;
@@ -393,9 +404,9 @@ abstract class Table implements TableInterface {
     /**
      * closure executer for any entire
      *
-     * @param \Closure $function
+     * @param Closure $function
      */
-    public function foreachCall ( \Closure $function ) {
+    public function foreachCall ( Closure $function ) {
         $this->reset();
         while ($prop = $this->current()) {
             $function( $prop );
@@ -411,6 +422,8 @@ abstract class Table implements TableInterface {
     /**
      * overwrite this for handling
      * new created items
+     * @param PropsFactory $item
+     * @param bool $loadedFromDb
      * @return PropsFactory
      */
     protected function newItem ( PropsFactory $item, $loadedFromDb = true ) {
@@ -421,14 +434,14 @@ abstract class Table implements TableInterface {
      * iterates over all entries and call defined method.
      * this method must define his own PropsFactory as parameter
      * @param string $method name of the methof that must be created in child class
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
-    public function iterate ( $method ) {
+    public function iterate (string $method) {
         if ($this->count() < 1) {
             return;
         }
         if (!method_exists( $this, $method )) {
-            throw new \InvalidArgumentException( "Method {$method} not defined" );
+            throw new InvalidArgumentException( "Method {$method} not defined" );
         }
         $this->reset();
         while ($prop = $this->current()) {

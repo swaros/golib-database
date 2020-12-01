@@ -2,6 +2,8 @@
 
 namespace golibdatabase\Database\MySql\Diff;
 
+use golib\Types\Props;
+
 /**
  * Description of Row
  *
@@ -14,8 +16,8 @@ class Row {
 
     /**
      *
-     * @var Props
+     * @var Props|null
      */
-    public $originSet = NULL;
+    public ?Props $originSet = NULL;
 
 }

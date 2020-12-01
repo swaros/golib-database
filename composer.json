@@ -14,7 +14,8 @@
     "license": "MIT",
     "require": {
         "php": "8.*",
-        "gorgo/golib": "dev-wip/php8"
+        "gorgo/golib": "dev-wip/php8",
+        "ext-mysqli": "*"
     },
     "require-dev": {
         "phpunit/phpunit": "9.4.3"

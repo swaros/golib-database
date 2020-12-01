@@ -9,8 +9,8 @@ namespace golibdatabase\Database\MySql;
  */
 class Order {
 
-    private $fieldnames = array();
-    private $sort = 'ASC';
+    private array $fieldnames = array();
+    private string $sort = 'ASC';
 
     public function setDesc () {
         $this->sort = 'DESC';
@@ -26,8 +26,7 @@ class Order {
 
     public function getSortState () {
         if (count( $this->fieldnames ) > 0) {
-            $sort = ' ORDER BY ' . implode( ',', array_keys( $this->fieldnames ) ) . ' ' . $this->sort;
-            return $sort;
+            return ' ORDER BY ' . implode( ',', array_keys( $this->fieldnames ) ) . ' ' . $this->sort;
         }
 
         return '';

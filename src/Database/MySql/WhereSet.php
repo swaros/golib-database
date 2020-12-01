@@ -20,7 +20,7 @@ class WhereSet {
     const USE_AND = 1;
 
     /**
-     * stetements compared by or
+     * statements compared by or
      */
     const USE_OR = 2;
 
@@ -29,54 +29,54 @@ class WhereSet {
      * that should be equal to given value
      * @var array
      */
-    private $equals = array();
+    private array $equals = array();
 
     /**
      *
-     * @var string
+     * @var array
      */
-    private $in = array();
+    private array $in = array();
 
     /**
      *
-     * @var string
+     * @var array
      */
-    private $notIn = array();
+    private array $notIn = array();
 
     /**
      * contains all fieldnames
      * that should be not equal to given value
      * @var array
      */
-    private $notEquals = array();
+    private array $notEquals = array();
 
     /**
      * contains all fieldnames
      * that should be greather then the given value
      * @var array
      */
-    private $greater = array();
+    private array $greater = array();
 
     /**
      * contains all fieldnames
      * that should be equal to given value
      * @var array
      */
-    private $lower = array();
+    private array $lower = array();
 
     /**
      * the current compare mode
      * @var string
      */
-    private $compare = 'AND';
+    private string $compare = 'AND';
 
     /**
      * list of whereSet that have to be included
      * @var WhereSet[]
      */
-    private $otherWhere = array();
-    private $expressions = array();
-    private $nullusage = true;
+    private array $otherWhere = array();
+    private array $expressions = array();
+    private bool $nullusage = true;
 
     /**
      *
