@@ -7,8 +7,8 @@ namespace golibdatabase\Database\MySql;
  * @author tziegler
  */
 class Limit {
-    public $start = NULL;
-    public $count = NULL;
+    public string|int|null $start = NULL;
+    public string|int|null $count = NULL;
 
     /**
      * is the combination of
@@ -16,7 +16,7 @@ class Limit {
      * @return boolean
      */
     public function isUsable(){
-        return  ($this->count != NULL);
+        return  ($this->count != null);
     }
 
     /**
@@ -24,9 +24,9 @@ class Limit {
      * @return string
      */
     public function getLimitStr(){
-        if ($this->start === NULL){
+        if ($this->start === null && $this->count !== null){
             return "LIMIT {$this->count}";
-        } elseif ($this->start !== NULL && $this->count !== NULL) {
+        } elseif ($this->start !== null && $this->count !== null) {
             return "LIMIT {$this->start},{$this->count}";
         } else {
             return "";

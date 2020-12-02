@@ -103,6 +103,7 @@ abstract class Table implements TableInterface {
     /**
      * Load Data by using submitted Mysql Connection
      * @param MySql $db
+     * @throws Exception
      */
     public function fetchData ( MySql $db ) {
         $this->load( $db );
@@ -433,7 +434,7 @@ abstract class Table implements TableInterface {
     /**
      * iterates over all entries and call defined method.
      * this method must define his own PropsFactory as parameter
-     * @param string $method name of the methof that must be created in child class
+     * @param string $method name of the method that must be created in child class
      * @throws InvalidArgumentException
      */
     public function iterate (string $method) {

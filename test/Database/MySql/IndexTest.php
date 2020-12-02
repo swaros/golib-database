@@ -18,9 +18,6 @@ class IndexTest extends DatabaseTest
      */
     public function testBase()
     {
-        $result = $this->getMockBuilder(mysqli_result::class)
-            ->disableOriginalConstructor()
-            ->getMock();
 
         $conMock = $this->getMockBuilder(MySql\Connect::class)
             ->getMock()

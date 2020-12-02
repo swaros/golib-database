@@ -9,7 +9,7 @@ namespace golibdatabase\Database\MySql;
  */
 class Order {
 
-    private array $fieldnames = array();
+    private array $fieldNames = array();
     private string $sort = 'ASC';
 
     public function setDesc () {
@@ -21,12 +21,12 @@ class Order {
     }
 
     public function addSortField ( $name ) {
-        $this->fieldnames['`' . str_replace( '`', '', $name ) . '`'] = true;
+        $this->fieldNames['`' . str_replace( '`', '', $name ) . '`'] = true;
     }
 
     public function getSortState () {
-        if (count( $this->fieldnames ) > 0) {
-            return ' ORDER BY ' . implode( ',', array_keys( $this->fieldnames ) ) . ' ' . $this->sort;
+        if (count( $this->fieldNames ) > 0) {
+            return ' ORDER BY ' . implode( ',', array_keys( $this->fieldNames ) ) . ' ' . $this->sort;
         }
 
         return '';

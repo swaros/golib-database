@@ -16,13 +16,13 @@ class InsertStatement {
     private string $tableName = '';
     private array $fieldNames = array();
     private array $fieldValues = array();
-    private bool $duplicateHandling = true;
+    private bool $duplicateHandling;
     private int $rowCount = 0;
 
     /**
-     *
+     * InsertStatement constructor
      * @param string $tableName
-     * @param boolean $duplicateHandling use insert on Dublicate Key or not
+     * @param boolean $duplicateHandling use insert on Duplicate Key or not
      */
     public function __construct (string $tableName, $duplicateHandling = true ) {
         $this->tableName = $tableName;
@@ -30,8 +30,8 @@ class InsertStatement {
     }
 
     /**
-     * enables or disbales the handling of creating on duplicate key
-     *  'extension' for  insertstatements
+     * enables or disables the handling of creating on duplicate key
+     *  'extension' for  insertStatements
      * @param mixed $onOffBool
      */
     public function setOnDuplicateKey ( $onOffBool ) {
@@ -55,8 +55,8 @@ class InsertStatement {
     }
 
     /**
-     * register a Fieldname for insert into this table
-     * @param string $name of the Field. have to match witch the real fieldname in the table
+     * register a FieldName for insert into this table
+     * @param string $name of the Field. have to match witch the real fieldName in the table
      * @param bool $increasedOnUpdate
      * @return InsertStatement
      */
@@ -90,7 +90,7 @@ class InsertStatement {
      * @param string $name
      * @return string
      */
-    private function getRealFieldName ( $name ) {
+    private function getRealFieldName (string $name) {
         return '`' . $this->tableName . '`.' . str_replace( array(
                     '`',
                     ' ',
@@ -126,6 +126,12 @@ class InsertStatement {
      * @return Expression|string
      */
     private function getRowContent (int $rowNumber, string $fieldName):Expression|string {
+        if (empty($this->fieldValues)) {
+            error_log('no values added that can be used together with ' . $fieldName, E_USER_ERROR);
+        }
+        if (!isset($this->fieldValues[$rowNumber])){
+            error_log("unexpected access to index " . $rowNumber . ' field name ' . $fieldName, E_USER_ERROR);
+        }
         $data = $this->fieldValues[$rowNumber][$fieldName];
         if ($data instanceof Expression) {
             return $data;
@@ -174,7 +180,7 @@ class InsertStatement {
      * adds the duplicate key statement to exsting sql string
      * @param string $sql
      */
-    private function addDublicateStatement ( &$sql ) {
+    private function addDuplicateStatement (string &$sql) {
         $updateParams = array();
         $sql .= " ON DUPLICATE KEY UPDATE ";
         foreach ($this->fieldNames as $fieldName => $increased) {
@@ -208,7 +214,7 @@ class InsertStatement {
         }
         $sql .= implode( ',', $valArray );
         if ($this->duplicateHandling) {
-            $this->addDublicateStatement( $sql );
+            $this->addDuplicateStatement( $sql );
         }
 
         return $sql;

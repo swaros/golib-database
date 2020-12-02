@@ -2,6 +2,7 @@
 
 namespace golibdatabase\Database\MySql;
 
+use Exception;
 use golib\Types\Props;
 use golibdatabase\Database\MySql;
 
@@ -16,30 +17,37 @@ use golibdatabase\Database\MySql;
  */
 abstract class SingleTableContent extends Props implements TableInterface {
 
-    private $_whereSet = NULL;
+    private ?WhereSet $_whereSet = NULL;
 
     /**
      * last used sql
      * @var string
      */
-    private $_lastUsedQuery = '';
+    private string $_lastUsedQuery = '';
 
     /**
      * stored data from last load event
      * @var array
      */
-    private $_snapShot = array();
+    private array $_snapShot = array();
 
     /**
      * all existing diffs
      * @var array
      */
-    private $_diffList = array();
-    private $_buildIndex = false;
+    private array $_diffList = array();
+    private bool $_buildIndex = false;
+    /**
+     * @var array|bool|IndexSet[]
+     */
+    private bool|array $indicies;
+    private ?string $error;
+    private ?int $errorNumber;
 
     /**
      *
-     * @param \golibdatabase\Database\MySql\WhereSet $where
+     * @param WhereSet|null $where
+     * @throws Exception
      */
     public function __construct ( WhereSet $where = NULL ) {
         $this->_whereSet = $where;
@@ -51,7 +59,8 @@ abstract class SingleTableContent extends Props implements TableInterface {
      * get the Data from database
      * by using the submitted db connection
      * @param MySql $db
-     * @return type
+     * @return bool
+     * @throws TableException
      */
     public function getData ( MySql $db ) {
         return $this->load( $db );
@@ -70,7 +79,7 @@ abstract class SingleTableContent extends Props implements TableInterface {
     }
 
     /**
-     * retunrns the last statement that wasused forloading entries
+     * return the last statement that was used for loading entries
      * @return string
      */
     public function getLastusedSql () {
@@ -81,6 +90,8 @@ abstract class SingleTableContent extends Props implements TableInterface {
      * loads data and handle content
      * @param MySql $db
      * @return boolean
+     * @throws TableException
+     * @throws Exception
      */
     private function load ( MySql $db ) {
         $sql = $this->getLoadStatement();
@@ -102,15 +113,17 @@ abstract class SingleTableContent extends Props implements TableInterface {
 
     /**
      * gets the current used whereSet
-     * @return WhereSet
+     * @return WhereSet|null
      */
-    public function getCurrentWhereSet () {
+    public function getCurrentWhereSet ():WhereSet|null {
         return $this->_whereSet;
     }
 
     /**
      * handle the data
-     * @param \golibdatabase\Database\MySql\ResultSet $result
+     * @param ResultSet $result
+     * @throws TableException
+     * @throws Exception
      */
     private function handleResult ( ResultSet $result ) {
         if ($result->count() != 1) {
@@ -118,7 +131,6 @@ abstract class SingleTableContent extends Props implements TableInterface {
             throw new TableException( TableException::MESSAGE_NOT_SINGLE . $add,
                                       TableException::CODE_NOT_SINGLE );
         }
-
         $this->applyData( current( $result->getResult() ) );
         $this->_snapShot = current( $result->getResult() );
     }
@@ -128,6 +140,7 @@ abstract class SingleTableContent extends Props implements TableInterface {
      * the changed Values
      * @param MySql $db
      * @return boolean
+     * @throws Exception
      */
     public function updateTable ( MySql $db ) {
         $sql = $this->buildDiffUpdateStatement();
@@ -144,7 +157,7 @@ abstract class SingleTableContent extends Props implements TableInterface {
     }
 
     /**
-     * updatesthe snapshot after updateing
+     * updates the snapshot after updating
      */
     private function updateSnapshotFromDiff () {
         foreach ($this->_diffList as $key => $diff) {
@@ -177,7 +190,7 @@ abstract class SingleTableContent extends Props implements TableInterface {
     }
 
     /**
-     * calculates the differents between last loaded
+     * calculates the differences between last loaded
      * and changed Props
      */
     public function findDiffs () {

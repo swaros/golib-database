@@ -415,19 +415,19 @@ abstract class TableWriteable extends Table {
     }
 
     /**
-     * checks if the fieldname is unsigned
+     * checks if the fieldName is unsigned
      * and if the value also not negative
      * @param PropsFactory $compare
-     * @param type $fieldname
-     * @param type $resetValue
+     * @param string $fieldName
+     * @param int $resetValue
      * @return boolean
      */
-    private function validUnsigned ( PropsFactory $compare, $fieldname,
-                                     $resetValue ) {
-        if (!in_array( $fieldname, $this->ignoredProps ) && in_array( $fieldname,
+    private function validUnsigned ( PropsFactory $compare,string $fieldName,
+                                     int $resetValue ) {
+        if (!in_array( $fieldName, $this->ignoredProps ) && in_array( $fieldName,
                                                                       $this->unsignedFields )) {
-            if ($resetValue >= 0 && $compare->$fieldname < 0) {
-                $compare->$fieldname = $resetValue;
+            if ($resetValue >= 0 && $compare->$fieldName < 0) {
+                $compare->$fieldName = $resetValue;
                 return false;
             }
         }
@@ -438,7 +438,7 @@ abstract class TableWriteable extends Table {
      * checks if the two values matching
      * @param Types $valueLeft
      * @param Types $valueRight
-     * @return type
+     * @return bool
      */
     private function matching ( $valueLeft, $valueRight, $propName ) {
         $checkL = $valueLeft;

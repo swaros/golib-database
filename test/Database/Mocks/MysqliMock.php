@@ -108,6 +108,26 @@ class MysqliMock
 
     private array $queryResults = [];
 
+    private bool $triggerOnUndefinedQueries = false;
+    private \closure $callbackForUndefined;
+
+    /**
+     * @param \closure $callbackForUndefined
+     */
+    public function setCallbackForUndefined(\closure $callbackForUndefined): void
+    {
+        $this->setTriggerOnUndefinedQueries(true);
+        $this->callbackForUndefined = $callbackForUndefined;
+    }
+
+    /**
+     * @param bool $triggerOnUndefinedQueries
+     */
+    public function setTriggerOnUndefinedQueries(bool $triggerOnUndefinedQueries): void
+    {
+        $this->triggerOnUndefinedQueries = $triggerOnUndefinedQueries;
+    }
+
     /**
      * sets results for queries
      * @param mixed $result
@@ -139,6 +159,12 @@ class MysqliMock
         $this->queriesAsKey[$query] = $mode;
         if (array_key_exists($query, $this->queryResults)) {
             return $this->queryResults[$query];
+        }
+        if ($this->triggerOnUndefinedQueries) {
+            if ($this->callbackForUndefined) {
+                $exec = $this->callbackForUndefined;
+                $exec->call($this, $query);
+            }
         }
         return $this->result;
     }
