@@ -9,15 +9,12 @@ use mysqli_result;
  * @author tziegler
  */
 class ResultSet {
-    /**
-     *
-     * @var mysqli_result
-     */
-    private $res = NULL;
-    private $resultList = array();
-    private $error = NULL;
-    private $errorNr = NULL;
-    private $count = 0;
+
+    private ?mysqli_result $res = NULL;
+    private array $resultList = array();
+    private ?string $error = NULL;
+    private ?int $errorNr = NULL;
+    private int $count = 0;
 
     public function applyRow(array $row){
         $this->resultList[] = $row;

@@ -212,8 +212,8 @@ class MySql implements Provider
     {
         if (func_num_args() > 1) {
             $parameters = array_slice(func_get_args(), 1);
-            $qsql = new SimpleSql();
-            $query = $qsql->sqlString($query, $parameters);
+            $simpleSql = new SimpleSql();
+            $query = $simpleSql->sqlString($query, $parameters);
         }
         $res = $this->query($query, MYSQLI_USE_RESULT);
         $result = new MySql\ResultSet();
@@ -223,7 +223,6 @@ class MySql implements Provider
         }
         if ($res instanceof mysqli_result) {
             $result->applyRes($res);
-
             while ($row = $res->fetch_array(MYSQLI_ASSOC)) {
                 $result->applyRow($row);
             }
