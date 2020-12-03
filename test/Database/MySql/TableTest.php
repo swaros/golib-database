@@ -7,7 +7,6 @@ use Exception;
 use golib\Types\PropsFactory;
 use golibdatabase\Database\MySql\Table;
 use golibdatabase\Database\MySql\TableException;
-use golibdatabase\Database\MySql\WhereMode;
 use golibdatabase\Database\MySql\WhereSet;
 use InvalidArgumentException;
 

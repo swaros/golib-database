@@ -278,9 +278,9 @@ abstract class Table implements TableInterface
 
     /**
      * maps current for content
-     * @return PropsFactory|null
+     * @return PropsFactory|null|bool
      */
-    public function current(): PropsFactory|null
+    public function current(): PropsFactory|null|bool
     {
         if (!$this->contentNotExists()) {
             return current($this->itemContainer['content']);
@@ -290,9 +290,9 @@ abstract class Table implements TableInterface
 
     /**
      * maps end for content
-     * @return PropsFactory|null
+     * @return PropsFactory|null|bool
      */
-    public function end(): PropsFactory|null
+    public function end(): PropsFactory|null|bool
     {
         if (!$this->contentNotExists()) {
             return end($this->itemContainer['content']);
@@ -302,26 +302,26 @@ abstract class Table implements TableInterface
 
     /**
      * maps next for Content
-     * @return PropsFactory|null
+     * @return PropsFactory|null|bool
      */
-    public function next(): PropsFactory|null
+    public function next(): PropsFactory|null|bool
     {
         if (!$this->contentNotExists()) {
             return next($this->itemContainer['content']);
         }
-        return null;
+        return false;
     }
 
     /**
      * maps reset for content
-     * @return PropsFactory|null
+     * @return PropsFactory|null|bool
      */
-    public function reset(): PropsFactory|null
+    public function reset(): PropsFactory|null|bool
     {
         if (!$this->contentNotExists()) {
             return reset($this->itemContainer['content']);
         }
-        return null;
+        return false;
     }
 
     /**
@@ -365,10 +365,15 @@ abstract class Table implements TableInterface
 
     /**
      * checks if content is existing
+     * @param bool $canBeEmpty
      * @return bool
      */
-    private function contentNotExists(): bool
+    private function contentNotExists(bool $canBeEmpty = false): bool
     {
+        if ($canBeEmpty) {
+            return (!array_key_exists('content', $this->itemContainer)
+                || !is_array($this->itemContainer['content']));
+        }
         return (!array_key_exists('content', $this->itemContainer)
             || !is_array($this->itemContainer['content'])
             || empty($this->itemContainer['content']));
