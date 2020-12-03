@@ -88,45 +88,47 @@ class WhereSet {
         }
     }
 
-    public function isEqual ( $name, $value ) {
-        $this->equals[] = array(
-            $name => $value);
+    public function isEqual ( $name, $value ): self {
+        $this->equals[] = array($name => $value);
+        return $this;
     }
 
-    public function isIn ( $name, $value ) {
-        $this->in[] = array(
-            $name => $value);
+    public function isIn ( $name, $value ): self {
+        $this->in[] = array($name => $value);
+        return $this;
     }
 
-    public function isNotIn ( $name, $value ) {
-        $this->notIn[] = array(
-            $name => $value);
+    public function isNotIn ( $name, $value ): self {
+        $this->notIn[] = array($name => $value);
+        return $this;
     }
 
     public function isNotEqual ( $name, $value ) {
-        $this->notEquals[] = array(
-            $name => $value);
+        $this->notEquals[] = array($name => $value);
+        return $this;
     }
 
-    public function isGreater ( $name, $value ) {
-        $this->greater[] = array(
-            $name => $value);
+    public function isGreater ( $name, $value ): self {
+        $this->greater[] = array($name => $value);
+        return $this;
     }
 
-    public function isLower ( $name, $value ) {
-        $this->lower[] = array(
-            $name => $value);
+    public function isLower ( $name, $value ): self {
+        $this->lower[] = array($name => $value);
+        return $this;
     }
 
-    public function applyWhere ( self $where ) {
+    public function applyWhere ( self $where ): self {
         $this->otherWhere[] = $where;
+        return $this;
     }
 
-    public function expression ( Expression $expression ) {
+    public function expression ( Expression $expression ): self {
         $this->expressions[] = $expression;
+        return $this;
     }
 
-    private function assign ( &$where, $key, $compare, $value ) {
+    private function assign ( &$where, $key, $compare, $value ): self {
         if ($value instanceof Expression) {
             $where[] = "`{$key}` {$compare} {$value}";
         } elseif ($key instanceof Expression) {
@@ -136,9 +138,10 @@ class WhereSet {
         } else {
             $where[] = "`{$key}` {$compare} '{$value}'";
         }
+        return $this;
     }
 
-    public function getWhereCondition () {
+    public function getWhereCondition (): string {
         $where = array();
         foreach ($this->equals as $match) {
             foreach ($match as $key => $value) {
@@ -188,11 +191,10 @@ class WhereSet {
             $where[] = $whereObj->getWhereCondition();
         }
 
-        $sqlAdd = '(' . implode( ' ' . $this->compare . ' ', $where ) . ')';
-        return $sqlAdd;
+        return '(' . implode( ' ' . $this->compare . ' ', $where ) . ')';
     }
 
-    private function mapInStr ( $value ) {
+    private function mapInStr ( string $value ): string {
         $vals = explode( ',', $value );
         $vars = array();
         foreach ($vals as $ent) {
