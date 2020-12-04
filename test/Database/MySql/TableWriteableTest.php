@@ -155,6 +155,46 @@ class TableWriteableTest extends DatabaseTest
         }
 
     }
+
+    /**
+     * @throws Exception
+     */
+    public function testMultipleInserts()
+    {
+        $table = new TestTableWritable();
+        $table->setDuplicateKeyHandling(true);
+        $mysqli = $this->getMysqliMock();
+        $mysql = $this->getMysqlWithMocks($mysqli);
+        $this->createFetchArrayResult($mysqli, "SELECT * FROM `user_items`", $this->dataBase);
+        $table->fetchData($mysql);
+
+        $newProp = $table->getPropFactory();
+        $newProp->userID = 666;
+        $newProp->entryName = 'new-item';
+        $newProp->entryAmount = 200;
+        $table->insert($newProp);
+
+        $newProp = $table->getPropFactory();
+        $newProp->userID = 55;
+        $newProp->entryName = 'lamp';
+        $newProp->entryAmount = 77;
+        $table->insert($newProp);
+
+
+        $prop = $table->findFirstMatch("userID", 666);
+        if ($prop instanceof TestTableWritableProps){
+            $this->assertEquals("new-item", $prop->entryName);
+        }
+
+        $this->createUpdateResult(
+            $mysqli,
+            "INSERT INTO `user_items` (`user_items`.userID,`user_items`.entryName,`user_items`.entryAmount) VALUES ('666','new-item','200'),('55','lamp','77') ON DUPLICATE KEY UPDATE `user_items`.userID = VALUES(`user_items`.userID),`user_items`.entryName = VALUES(`user_items`.entryName),`user_items`.entryAmount = VALUES(`user_items`.entryAmount)",
+            1
+        );
+        $table->save($mysql);
+
+
+    }
 }
 
 

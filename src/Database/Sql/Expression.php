@@ -14,7 +14,7 @@ class Expression
     const NO_CONVERSION = false;
     const TABLE_NAME = 1;
 
-    public function __construct(string $expression, bool $convertFlag = false)
+    public function __construct(string $expression, bool|int $convertFlag = false)
     {
         if ($convertFlag !== false) {
             if ($convertFlag == self::TABLE_NAME) {

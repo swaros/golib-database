@@ -76,7 +76,7 @@ class WhereSet {
      */
     private array $otherWhere = array();
     private array $expressions = array();
-    private bool $nullusage = true;
+    private bool $nullUsage = true;
 
     /**
      *
@@ -133,7 +133,7 @@ class WhereSet {
             $where[] = "`{$key}` {$compare} {$value}";
         } elseif ($key instanceof Expression) {
             $where[] = "$key";
-        } elseif ($value === null && $this->nullusage) {
+        } elseif ($value === null && $this->nullUsage) {
             $where[] = "`{$key}` is null ";
         } else {
             $where[] = "`{$key}` {$compare} '{$value}'";
