@@ -5,8 +5,10 @@ namespace golibdatabase\Database\MySql;
 use Exception;
 use golib\Types\PropsFactory;
 use golib\Types\Types;
+use golibdatabase\Database\Model\LoggingEntryPoint;
 use golibdatabase\Database\MySql as Database;
 use InvalidArgumentException;
+use mysqli_result;
 
 /**
  * Description of TableWriteable
@@ -21,84 +23,85 @@ abstract class TableWriteable extends Table
      * by building updates
      * @var array
      */
-    private $ignoredProps = array(
+    private array $ignoredProps = array(
         '__origin',
         '__uuid',
     );
 
     /**
-     * contains firldnames that should not used
-     * for wherestatementesn inupdates
+     * contains field-names that should not used
+     * for where-statements in updates
      * @var array
      */
-    private $ignoreOnUpdateWhere = array();
+    private array $ignoreOnUpdateWhere = array();
 
     /**
      *
-     * @var InsertStatement
+     * @var InsertStatement|null
      */
-    private $inserthandler = NULL;
+    private ?InsertStatement $insertHandler = NULL;
 
     /**
-     * sets the on-duplicate-key updates for the inserthandler
+     * sets the on-duplicate-key updates for the insertHandler
      * @var boolean
      */
-    private $onDuplicateKeyOnInsert = false;
+    private bool $onDuplicateKeyOnInsert = false;
 
     /**
      *
-     * @var UpdateStatement
+     * @var UpdateStatement|null
      */
-    private $update = NULL;
+    private ?UpdateStatement $update = NULL;
 
     /**
      * stores all loaded items
-     * to determiate alll changes later
-     * @var array[PropsFactory]
+     * to determinate all changes later
+     * @var PropsFactory[]
      */
-    private $clones = array();
+    private array $clones = array();
 
     /**
      * if true INSERT ON DUPLICATE KEY UPDATE will be used
      * instead of update. so there is no longer a check
-     * depending on previus values
+     * depending on previous values
      * @var boolean
      */
-    private $updateByInsert = false;
+    private bool $updateByInsert = false;
 
     /**
-     * contains all fired statementens
-     * that was sucessfully executed
+     * contains all fired statements
+     * that was successfully executed
      * @var array
      */
-    private $statements = array();
+    private array $statements = array();
 
     /**
-     * contains all fired statementens
+     * contains all fired statements
      * that was executed but dos not affect any rows
      * @var array
      */
-    private $nonAffectingStatements = array();
+    private array $nonAffectingStatements = array();
 
     /**
      * flag for new registered items
      * @var boolean
      */
-    private $newItems = false;
-    private $newItemsStorage = array();
+    private bool $newItems = false;
+    private array $newItemsStorage = array();
 
     /**
-     * contains all fieldnames that
+     * contains all fieldNames that
      * are unsigned. this means any update
      * of values must check if the amount always
-     * equalor higher then zero
+     * equal higher then zero
      * @var array
      */
-    private $unsignedFields = array();
+    private array $unsignedFields = array();
 
     /**
      * handles new items
      * @param PropsFactory $item
+     * @param bool $loadedFromDb
      * @return PropsFactory
      */
     protected function newItem(PropsFactory $item, $loadedFromDb = true)
@@ -127,43 +130,43 @@ abstract class TableWriteable extends Table
      *
      * @param bool $onOffBool
      */
-    public function setDuplicateKeyHandling($onOffBool)
+    public function setDuplicateKeyHandling(bool $onOffBool)
     {
         $this->onDuplicateKeyOnInsert = (bool)$onOffBool;
     }
 
     /**
-     * adds an fieldname that have to be
-     * excluded on update statements as where statetment.
-     * this means NOT the field himself willlnot be updated. this affects
+     * adds an fieldName that have to be
+     * excluded on update statements as where statement.
+     * this means NOT the field himself will not be updated. this affects
      * the update check only.so the item value must no longer match to
      * the stored value
-     * @param string $fieldname
+     * @param string $fieldName
      */
-    public function setIgnoredFieldOnUpdate($fieldname)
+    public function setIgnoredFieldOnUpdate(string $fieldName)
     {
-        $this->ignoreOnUpdateWhere[] = $fieldname;
+        $this->ignoreOnUpdateWhere[] = $fieldName;
     }
 
     /**
-     * add fieldname that will be ignored by database
+     * add fieldName that will be ignored by database
      * updates
      * @param string $field
      */
-    public function registerIgnoredField($field)
+    public function registerIgnoredField(string $field)
     {
         $this->ignoredProps[] = $field;
     }
 
     /**
      * get the updated object by the id
-     * that come from updatehandler
-     * @param string $uid
-     * @return PropsFactory
+     * that comes from updateHandler
+     * @param string|null $uid
+     * @return Diff\Row|PropsFactory|null
      */
-    private function getUpdatedPropById($uid)
+    private function getUpdatedPropById(string|null $uid): Diff\Row|PropsFactory|null
     {
-        $props = $this->getUpater()->getLastUpdated();
+        $props = $this->getUpdater()->getLastUpdated();
 
         if ($uid == NULL || empty($props)) {
             return NULL;
@@ -177,12 +180,12 @@ abstract class TableWriteable extends Table
     }
 
     /**
-     * add a fieldname that can not conatins numbers
+     * add a fieldName that can not contains numbers
      * lower the zero.if so, the update or insert will
      * be aborted.
      * @param string $field
      */
-    public function registerUnsignedField($field)
+    public function registerUnsignedField(string $field)
     {
         $this->unsignedFields[] = $field;
     }
@@ -190,41 +193,43 @@ abstract class TableWriteable extends Table
     /**
      * start diff calculation
      * and validation on diffs
+     * @return bool
      */
-    private function calcutateDiff()
+    private function calculateDiff(): bool
     {
-        $this->getUpater()->clearDiff();
-        $sucess = true;
+        $this->getUpdater()->clearDiff();
+        $success = true;
         foreach ($this->clones as $clone) {
-            #$sucess = $sucess && $this->validateOrigin( $clone );
             if ($this->getDiff($clone)) {
-                $sucess = $sucess && $this->validateOrigin($clone);
+                $success = $success && $this->validateOrigin($clone);
             }
         }
-        return $sucess;
+        return $success;
     }
 
     /**
      * save changed properties back to database
      * @param Database $db
+     * @return bool
+     * @throws Exception
      */
-    public function save(Database $db)
+    public function save(Database $db): bool
     {
-        $valide = $this->calcutateDiff();
-        if ($valide == false) {
+        $valid = $this->calculateDiff();
+        if ($valid == false) {
+            $this->triggerError("diff calculation was invalid. abort", E_USER_NOTICE);
             return false;
         }
-        $sql = NULL;
+        $sqlArr = NULL;
         $success = true;
-        if ($this->updateByInsert && $this->inserthandler != NULL) {
-            $sql = $this->inserthandler->createInsertStatement();
-            $success = $success && $this->execStatement($db, $sql);
+        if ($this->updateByInsert && $this->insertHandler != NULL) {
+            $sqlArr = $this->insertHandler->createInsertStatement();
+            $success = $success && $this->execStatement($db, $sqlArr);
         } elseif (!$this->updateByInsert) {
-            $sqls = $this->getUpater()->getUpdates();
-            foreach ($sqls as $uuid => $statement) { // the uuid is important to get the updated object
-                // execstatements get also the object by uui to updates his context
-                $success = $success && $this->execStatement($db, $statement,
-                        $uuid);
+            $sqlArr = $this->getUpdater()->getUpdates();
+            foreach ($sqlArr as $uuid => $statement) { // the uuid is important to get the updated object
+                // exec statements get also the object by uui to updates his context
+                $success = $success && $this->execStatement($db, $statement, $uuid);
             }
         }
 
@@ -233,12 +238,12 @@ abstract class TableWriteable extends Table
             return false;
         }
 
-        if ($this->newItems && $this->inserthandler != NULL) {
+        if ($this->newItems && $this->insertHandler != NULL) {
             foreach ($this->newItemsStorage as $newItem) {
                 $success = $success && $this->applyToInsert($newItem);
             }
             $success = $success && $this->execStatement($db,
-                    $this->inserthandler->createInsertStatement());
+                    $this->insertHandler->createInsertStatement());
             if ($success) {
                 $this->updateInsertsToKnown();
             }
@@ -253,7 +258,7 @@ abstract class TableWriteable extends Table
         }
         $this->newItems = false;
         $this->newItemsStorage = array();
-        $this->inserthandler = NULL; // remove the inserthandler so allcached insert are gone
+        $this->insertHandler = NULL; // remove the insertHandler so all cached insert are gone
     }
 
     /**
@@ -286,6 +291,16 @@ abstract class TableWriteable extends Table
             $this->statements[] = $sql;
             $this->updateCloneByUid($uuid);
             return true;
+        } else {
+            $this->triggerError(
+                "error while executing ["
+                . $sql . "] error?("
+                . $result->getError()
+                . ') or affectedRows==0?('
+                . $db->getlastAffectedRows()
+                . ')'
+                , E_USER_WARNING
+            );
         }
         $this->nonAffectingStatements[] = $sql;
         return false;
@@ -294,9 +309,9 @@ abstract class TableWriteable extends Table
     /**
      * updates PropsFactory object clone so
      * on next diff calculation there should no diff found
-     * @param string $uuid
+     * @param string|null $uuid
      */
-    private function updateCloneByUid(string $uuid)
+    private function updateCloneByUid(string|null $uuid)
     {
         $clone = $this->getUpdatedPropById($uuid);
 
@@ -307,16 +322,19 @@ abstract class TableWriteable extends Table
         foreach ($clone as $clonedProp => $clonedValue) {
             if (!in_array($clonedProp, $this->ignoredProps)) {
                 if (is_object($clone->$clonedProp)) {
-                    $clone->$clonedProp = clone $clone->__origin->$clonedProp; // TODO: no refrence on objects
+                    $clone->$clonedProp = clone $clone->__origin->$clonedProp; // TODO: no reference on objects
                 } else {
-                    $clone->$clonedProp = $clone->__origin->$clonedProp; // TODO: no refrence on objects
+                    $clone->$clonedProp = $clone->__origin->$clonedProp; // TODO: no reference on objects
                 }
             }
         }
+        $this->log(LoggingEntryPoint::DEBUG, "clone created from", $uuid, "clone", $clone);
     }
 
     /**
-     *
+     * @param Database $db
+     * @return bool|mysqli_result
+     * @throws Exception
      */
     public function truncateAffected(Database $db)
     {
@@ -334,7 +352,7 @@ abstract class TableWriteable extends Table
      * database
      * @return array
      */
-    public function getStatements()
+    public function getStatements(): array
     {
         return $this->statements;
     }
@@ -344,7 +362,7 @@ abstract class TableWriteable extends Table
      * database
      * @return array
      */
-    public function getNonAffectingStatements()
+    public function getNonAffectingStatements(): array
     {
         return $this->nonAffectingStatements;
     }
@@ -353,7 +371,7 @@ abstract class TableWriteable extends Table
      * get the update builder
      * @return UpdateStatement
      */
-    private function getUpater()
+    private function getUpdater()
     {
         if ($this->update == NULL) {
             $this->update = new UpdateStatement($this);
@@ -365,30 +383,37 @@ abstract class TableWriteable extends Table
 
     /**
      * get the insertStatement handler
+     * @param PropsFactory $template
      * @return InsertStatement
      */
-    private function getInsert(PropsFactory $template)
+    private function getInsert(PropsFactory $template): InsertStatement
     {
-        if ($this->inserthandler == NULL) {
-            $this->inserthandler = new InsertStatement($this->getTableName(),
-                $this->onDuplicateKeyOnInsert);
-            $this->inserthandler->addFieldsByProps($template);
+        if ($this->insertHandler == NULL) {
+            $this->insertHandler = new InsertStatement(
+                $this->getTableName(),
+                $this->onDuplicateKeyOnInsert
+            );
+            $this->insertHandler->addFieldsByProps($template);
         }
-        return $this->inserthandler;
+        return $this->insertHandler;
     }
 
     /**
-     *
+     * calculates the different from
+     * a cloned Props object to find
+     * the fields that have changed
+     * and needs a update
      * @param PropsFactory $clone
+     * @return bool
      */
     private function getDiff(PropsFactory $clone)
     {
         $compare = $clone->__origin;
         $diffFound = false;
         foreach ($clone as $propName => $propValue) {
-            if (!in_array($propName, $this->ignoredProps) && !$this->matching($compare->$propName,
-                    $propValue,
-                    $propName)) {
+            if (!in_array($propName, $this->ignoredProps) && !$this->matching(
+                    $compare->$propName,
+                    $propValue)) {
                 $diffFound = true;
             }
         }
@@ -398,14 +423,14 @@ abstract class TableWriteable extends Table
         } elseif ($diffFound && !$this->updateByInsert) {
             $this->onUpdate($compare);
 
-            $this->getUpater()->updateDiff($clone, $compare,
+            $this->getUpdater()->updateDiff($clone, $compare,
                 $this->ignoredProps);
         }
         return $diffFound;
     }
 
     /**
-     * validtae against unsigned for the
+     * validate against unsigned for the
      * origin props, by checking
      * the cloned props
      * @param PropsFactory $clone
@@ -444,14 +469,12 @@ abstract class TableWriteable extends Table
      * and if the value also not negative
      * @param PropsFactory $compare
      * @param string $fieldName
-     * @param int $resetValue
+     * @param mixed $resetValue
      * @return boolean
      */
-    private function validUnsigned(PropsFactory $compare, string $fieldName,
-                                   int $resetValue)
+    private function validUnsigned(PropsFactory $compare, string $fieldName, $resetValue)
     {
-        if (!in_array($fieldName, $this->ignoredProps) && in_array($fieldName,
-                $this->unsignedFields)) {
+        if (!in_array($fieldName, $this->ignoredProps) && in_array($fieldName, $this->unsignedFields)) {
             if ($resetValue >= 0 && $compare->$fieldName < 0) {
                 $compare->$fieldName = $resetValue;
                 return false;
@@ -461,12 +484,16 @@ abstract class TableWriteable extends Table
     }
 
     /**
-     * checks if the two values matching
-     * @param Types $valueLeft
-     * @param Types $valueRight
+     * checks if the two values matching.
+     * this check did not check against
+     * different types, because the only
+     * thing what matters is the value, not
+     * the type in this case.
+     * @param mixed $valueLeft
+     * @param mixed $valueRight
      * @return bool
      */
-    private function matching($valueLeft, $valueRight, $propName)
+    private function matching($valueLeft, $valueRight): bool
     {
         $checkL = $valueLeft;
         $checkR = $valueRight;
@@ -481,13 +508,14 @@ abstract class TableWriteable extends Table
     }
 
     /**
-     * register propertie for inserting.
+     * register property for inserting.
      * returns false if a check against
      * the unsigned fields is not positive the
      * make sure no negative amounts was inserted
      * @param PropsFactory $new
+     * @return bool
      */
-    private function applyToInsert(PropsFactory $new)
+    private function applyToInsert(PropsFactory $new): bool
     {
         $valid = $this->validateUnsigned($new);
         if ($valid === false) {
@@ -504,7 +532,8 @@ abstract class TableWriteable extends Table
 
     /**
      * overwrite for own handling on items
-     * that willbe updated
+     * that will be updated
+     * @param PropsFactory $item
      */
     protected function onUpdate(PropsFactory &$item)
     {
@@ -514,6 +543,7 @@ abstract class TableWriteable extends Table
     /**
      * overwrite for own handling on items
      * that will be inserted
+     * @param PropsFactory $item
      */
     protected function onInsert(PropsFactory &$item)
     {

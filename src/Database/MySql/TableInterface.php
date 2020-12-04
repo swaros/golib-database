@@ -3,7 +3,7 @@
 namespace golibdatabase\Database\MySql;
 
 /**
- * interface for acces to Tables
+ * interface for access to Tables
  * @author tziegler
  */
 interface TableInterface {

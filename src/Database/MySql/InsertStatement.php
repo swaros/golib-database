@@ -4,6 +4,7 @@ namespace golibdatabase\Database\MySql;
 
 use golib\Types\MapConst;
 use golib\Types\Props;
+use golibdatabase\Database\Message\MessageHandler;
 use golibdatabase\Database\Sql\Expression;
 
 /**
@@ -19,6 +20,8 @@ class InsertStatement {
     private bool $duplicateHandling;
     private int $rowCount = 0;
 
+    use MessageHandler;
+
     /**
      * InsertStatement constructor
      * @param string $tableName
@@ -27,6 +30,7 @@ class InsertStatement {
     public function __construct (string $tableName, $duplicateHandling = true ) {
         $this->tableName = $tableName;
         $this->duplicateHandling = $duplicateHandling;
+
     }
 
     /**

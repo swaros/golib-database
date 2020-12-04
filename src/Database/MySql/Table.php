@@ -5,17 +5,20 @@ namespace golibdatabase\Database\MySql;
 use Closure;
 use Exception;
 use golib\Types\PropsFactory;
+use golibdatabase\Database\Message\MessageHandler;
+use golibdatabase\Database\Model\ErrorHandler;
+use golibdatabase\Database\Model\LoggingEntryPoint;
 use golibdatabase\Database\MySql;
 use InvalidArgumentException;
 
 /**
- * Repesents a Layer for a single Table
- *
- * @author tziegler
+ * Class Table
+ * @package golibdatabase\Database\MySql
+ * @author tziegler <thomas.zglr@googlemail.com>
  */
-abstract class Table implements TableInterface
+abstract class Table implements TableInterface, ErrorHandler, LoggingEntryPoint
 {
-
+    use MessageHandler;
     private ?string $tableName = NULL;
 
     /**
@@ -43,13 +46,6 @@ abstract class Table implements TableInterface
      */
     private ?int $errorNumber = NULL;
 
-    /**
-     * @return int|null
-     */
-    public function getErrorNumber(): ?int
-    {
-        return $this->errorNumber;
-    }
 
     private bool $buildIndex = false;
 
@@ -91,6 +87,7 @@ abstract class Table implements TableInterface
      */
     private array $loadFields = array();
 
+
     /**
      *
      * @param WhereSet|null $where optional if no full content needed
@@ -104,11 +101,20 @@ abstract class Table implements TableInterface
         if (is_string($tableName) && $tableName != '') {
             $this->tableName = $tableName;
         } else {
-            throw new InvalidArgumentException("Tablename must be a String");
+            throw new InvalidArgumentException("TableName must be a String");
         }
         $this->where = $where;
         $this->limit = $limit;
         $this->sort = $order;
+        $this->setPhpNativeTriggerErrorFor(E_USER_ERROR, E_USER_NOTICE, E_USER_WARNING);
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getErrorNumber(): ?int
+    {
+        return $this->errorNumber;
     }
 
     /**
@@ -250,6 +256,11 @@ abstract class Table implements TableInterface
             $this->fetched = true;
             return true;
         }
+        $this->triggerError(
+            "error: " . $result->getError()
+            . " errorNr:" . $result->getErrorNr()
+            , E_USER_ERROR
+        );
         $this->error = $result->getError();
         $this->errorNumber = $result->getErrorNr();
         return false;
@@ -397,7 +408,7 @@ abstract class Table implements TableInterface
                 return $content;
             } elseif ($content->$key == $value) {
                 if ($checkNonTypeSave && gettype($content->$key) != gettype($value)) {
-                    trigger_error("value matching but Type not matching."
+                    $this->triggerError("value matching but Type not matching."
                         . " make sure to store in the expected Format. type for search[{$key}] submitted as "
                         . gettype($value)
                         . ' but stored type is '

@@ -143,8 +143,7 @@ class UpdateStatement
     private function applyWhereByProps(Props $origin, WhereSet $where)
     {
         foreach ($origin as $field => $value) {
-            if (!in_array($field, $this->ignoreList) && !in_array($field,
-                    $this->ignoreWhereOnUpdate)) {
+            if (!in_array($field, $this->ignoreList) && !in_array($field, $this->ignoreWhereOnUpdate)) {
                 $where->isEqual($field, $value);
             }
         }
@@ -154,6 +153,9 @@ class UpdateStatement
     {
         $val = $diff->value;
         if ($diff->value === MapConst::TIMER) {
+            $diff->value = '';
+        }
+        if ($diff->value === MapConst::AUTOINC) {
             $diff->value = '';
         }
         $statement = $this->table->getTableName()
