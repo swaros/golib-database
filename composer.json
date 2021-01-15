@@ -10,11 +10,11 @@
             "email": "thomas.zglr@googlemail.com"
         }
     ],
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "license": "MIT",
     "require": {
         "php": "8.*",
-        "gorgo/golib": "dev-wip/php8",
+        "gorgo/golib": "0.2.1",
         "ext-mysqli": "*"
     },
     "require-dev": {
