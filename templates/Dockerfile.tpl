@@ -14,9 +14,6 @@ RUN apt-get update && apt-get install -y \
     && echo okay
 {{- end }}
 
-
-
-
 {{- if $.php.extend }} 
  {{- range $k, $ext := $.php.extend }}
  RUN docker-php-ext-install {{ $ext}} && docker-php-ext-enable {{ $ext}}
