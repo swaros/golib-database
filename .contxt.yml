@@ -1,0 +1,11 @@
+config:
+  imports:
+     - config.yml config
+     - templates/Dockerfile.tpl dockerfile
+
+task:
+  - id: docker
+    script:
+      - echo "${dockerfile}"
+      - "#@var-to-file dockerfile Dockerfile"
+      - docker build . --label ${config:php.image.name} -t ${config:php.image.tag}

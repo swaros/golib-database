@@ -1,0 +1,14 @@
+php:
+  version: 8.0
+  image:
+    tag: golib-local
+    name: php-golib
+  software:
+    - git
+    - zip
+  extend:
+    - mysqli
+  run:
+    - composer install --ignore-platform-reqs --no-scripts
+    - vendor/bin/phpunit test
+  
